@@ -213,7 +213,7 @@
          (body (replace-regexp-in-string "" "" (cdr (assq 'body issue)))))
 
     (insert "** " (if (string= state "open") "TODO" "DONE")
-            (format " [[%s][%s]]" html_url title)
+            (format " [[%s][#%s %s]]" html_url number title)
             (if issue-labels (concat " :" label-tags ":") "")
 
             "\n\n")
