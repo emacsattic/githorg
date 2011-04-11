@@ -66,6 +66,13 @@
   :type 'face
   :group 'githorg)
 
+(defvar githorg-patch-button-keymap
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "RET") 'githorg-open-patch)
+    (set-keymap-parent map org-mode-map)
+    map)
+  "Keymap used by Githorg for patch buttons")
+
 (defvar githorg-last-state)
 (make-variable-buffer-local 'githorg-last-state)
 
@@ -115,9 +122,7 @@
 
 (define-derived-mode githorg-issue-list-mode org-mode
   "Major mode for listing GitHub issues."
-  :group 'githorg
-
-)
+  :group 'githorg)
 
 (defun githorg-issues (project)
   "List issues for a GitHub project in a new githorg buffer."
@@ -147,13 +152,6 @@
   (mapcar (lambda (cell)
             (list (intern (concat prefix (symbol-name (car cell)))) (cdr cell)))
           vars))
-
-(defvar githorg-patch-button-keymap
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "RET") 'githorg-open-patch)
-    (set-keymap-parent map org-mode-map)
-    map)
-  "Keymap used by Githorg for patch buttons")
 
 (defun githorg-open-patch ()
   (interactive)
