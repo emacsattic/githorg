@@ -171,16 +171,17 @@
                 (beg beg)
                 (end end))
     (url-retrieve (format "http://www.gravatar.com/avatar/%s?s=%s" hash size)
-                  (lambda (&rest ignore)
+                  (lambda (&rest ignore)       ;; Callback
                     (goto-char (point-min))
                     (search-forward "\n\n")
                     (add-text-properties beg end
                       (list 'invisible nil
-                            'display (list 'image
-                                           :type 'jpeg
-                                           :data (buffer-substring (point) (point-max))
-                                           :ascent 'center :background nil))
-                                         buffer)))))
+                            'display
+                            (list 'image
+                                  :type 'jpeg
+                                  :data (buffer-substring (point) (point-max))
+                                  :ascent 'center :background nil))
+                      buffer)))))
 
 
 (defun githorg-format-issue (issue)
