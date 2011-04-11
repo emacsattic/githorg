@@ -133,11 +133,13 @@
   "Major mode for listing GitHub issues."
   :group 'githorg)
 
+;;;###autoload
 (defun githorg-issues (project)
   "List issues for a GitHub project in a new githorg buffer."
   (interactive (list (read-string "Project: ")))
-  (let ((buffer-read-only t))
-    (pop-to-buffer (format "*githorg:%s*" project))
+  (pop-to-buffer (format "*githorg:%s*" project))
+  (buffer-disable-undo)
+  (let ((buffer-read-only t))           ; So nobody changes it while we update
     (githorg-issue-list-mode)
     (setq githorg-project project
           githorg-last-state (githorg-fetch-open-issues project))
@@ -148,7 +150,8 @@
       (goto-char (point-min))
       (githorg-issue-refresh))
     (goto-char (point-min))
-    (set-buffer-modified-p nil)))
+    (set-buffer-modified-p nil)
+    (buffer-enable-undo)))
 
 (defun githorg-issue-refresh ()
   "Refresh the display of issues."
