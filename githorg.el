@@ -81,16 +81,14 @@
 
 
 
-(defmacro with-auth (&rest body)
-  `(let ((url-basic-auth-storage
-          (("github.com:443"
-            ("GitHub API FIXME" .
-             ,(base64-encode-string (format "%s:%s" githorg-github-username
-                                            githorg-github-token)))))))
+(defmacro with-githorg-auth (&rest body)
+  `(let ((url-request-extra-headers
+          '(("Authorization" .
+             ,(format "Basic %s"
+                      (base64-encode-string (format "%s/token:%s"
+                                                    githorg-github-username
+                                                    githorg-github-token)))))))
      ,@body))
-
-(defun githorg-url-action (action)
-  (apply 'concat githorg-github-api (symbol-name action)))
 
 (defun githorg-fetch-open-issues (project)
   "Return only open issues."
