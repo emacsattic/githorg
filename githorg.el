@@ -81,13 +81,16 @@
 
 
 
+(defun githorg-auth-headers (&optional username token)
+  (let ((username (or username githorg-github-username))
+        (token (or token githorg-github-token)))
+    (cons "Authorization"
+          (format "Basic %s"
+                  (base64-encode-string (format "%s/token:%s" username token))))))
+
 (defmacro with-githorg-auth (&rest body)
   `(let ((url-request-extra-headers
-          '(("Authorization" .
-             ,(format "Basic %s"
-                      (base64-encode-string (format "%s/token:%s"
-                                                    githorg-github-username
-                                                    githorg-github-token)))))))
+          '(,(githorg-auth-headers))))
      ,@body))
 
 (defun githorg-fetch-open-issues (project)
@@ -103,9 +106,17 @@
   (vconcat (githorg-fetch-open-issues project)
            (githorg-fetch-closed-issues project)))
 
+(defun githorg-owner-projectp (project &optional owner)
+  (let ((owner (or owner githorg-github-username)))
+    (string= (substring project 0 (+ (length owner) 1))
+             (concat owner "/"))))
+
 (defun githorg-fetch (project action &optional args)
-  "Return content issues."
-  (let* ((action (if (symbolp action) (symbol-name action) action))
+  "Perform a request to the Issues API. "
+  (let* ((url-request-extra-headers
+          (when (githorg-owner-projectp project)
+            (list (githorg-auth-headers))))
+         (action (if (symbolp action) (symbol-name action) action))
          (url (format (concat "%s/%s/%s" (when args "/%s"))
                       githorg-github-api action project args)))
     (with-current-buffer (url-retrieve-synchronously url)
