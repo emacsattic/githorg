@@ -137,10 +137,10 @@
   "List issues for a GitHub project in a new githorg buffer."
   (interactive (list (read-string "Project: ")))
   (let ((buffer-read-only t))
-    (setq githorg-project project)
     (pop-to-buffer (format "*githorg:%s*" project))
     (githorg-issue-list-mode)
-    (setq githorg-last-state (githorg-fetch-open-issues project))
+    (setq githorg-project project
+          githorg-last-state (githorg-fetch-open-issues project))
 
     (let ((inhibit-read-only t))
       (set-text-properties (point-min) (point-max) nil)
