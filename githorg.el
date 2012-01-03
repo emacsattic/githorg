@@ -32,7 +32,9 @@
 
 (require 'url)
 (require 'json)
-(eval-when-compile (require 'cl))
+(eval-when-compile
+  (require 'cl)
+  (require 'org))
 
 
 
@@ -111,11 +113,27 @@
     (string= (substring project 0 (+ (length owner) 1))
              (concat owner "/"))))
 
+(defun githorg-find-coding-system (&optional buffer)
+  "Return the coding system for the response."
+  (with-current-buffer (or buffer (current-buffer))
+    (save-restriction
+      (save-excursion
+        (goto-char (point-min))
+        (let ((case-fold-search t)
+              (coding-system 'binary))
+          (re-search-forward "^Content-Type.*charset=")
+          (goto-char (match-end 0))
+          (forward-sexp)
+          (condition-case nil
+              (setq coding-system
+                    (coding-system-type
+                     (intern (buffer-substring (match-end 0) (point)))))
+            (coding-system-error 'binary)))))))
+
 (defun githorg-fetch (project action &optional args)
   "Perform a request to the Issues API. "
   (let* ((url-request-extra-headers
-          (when (githorg-owner-projectp project)
-            (list (githorg-auth-headers))))
+          (list (githorg-auth-headers)))
          (action (if (symbolp action) (symbol-name action) action))
          (url (format (concat "%s/%s/%s" (when args "/%s"))
                       githorg-github-api action project args)))
@@ -167,18 +185,19 @@
 
 (defun githorg-open-patch ()
   (interactive)
-  (let ((patch-url (get-text-property (point) 'url))
-        (issue-number (get-text-property (point) 'issue-number)))
-    (pop-to-buffer (format "*githorg:%s/%s.patch" githorg-project issue-number))
-    (when (and (bobp) (eobp))
-      (widen)
-      (delete-region (point-min) (point-max))
-      (insert (with-current-buffer (url-retrieve-synchronously patch-url)
-                (search-forward "\n\n")
-                (buffer-substring (point) (point-max))))
-      (goto-char (point-min))
-      (set-buffer-modified-p nil)
-      (diff-mode))))
+  (with-githorg-auth
+   (let ((patch-url (get-text-property (point) 'url))
+         (issue-number (get-text-property (point) 'issue-number)))
+     (pop-to-buffer (format "*githorg:%s/%s.patch" githorg-project issue-number))
+     (when (and (bobp) (eobp))
+       (widen)
+       (delete-region (point-min) (point-max))
+       (insert (with-current-buffer (url-retrieve-synchronously patch-url)
+                 (search-forward "\n\n")
+                 (buffer-substring (point) (point-max))))
+       (goto-char (point-min))
+       (set-buffer-modified-p nil)
+       (diff-mode)))))
 
 (defun githorg-display-avatar (hash size buffer beg end)
   (lexical-let ((buffer buffer)
